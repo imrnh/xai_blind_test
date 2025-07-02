@@ -94,7 +94,7 @@ async def get_next_image(user_id: str):
         "heatmaps": [
             {
                 "method": method,
-                "image_path": f"{GITHUB_RAW_BASE}/{next_folder_id}/heatmap_{method}.jpg"
+                "image_path": f"{GITHUB_RAW_BASE}/{next_folder_id}/heatmap_{method}.png"
             } for method in shuffled_methods
         ]
     }
