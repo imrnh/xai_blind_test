@@ -29,7 +29,7 @@ db = client.saliency_voting
 USERS_COLLECTION = "xai_blind_voting_users"
 
 # Constants
-TOTAL_FOLDERS = 100  # Adjust as needed
+TOTAL_FOLDERS = 290  # Adjust as needed
 HEATMAP_METHODS = ['beyond_intuition', 'gradcam', 'integrated_gradient', 'our', 'rollout']
 GITHUB_RAW_BASE = "https://raw.githubusercontent.com/imrnh/xai_blind_test/main/data/output"
 
@@ -89,7 +89,7 @@ async def get_next_image(user_id: str):
 
     return {
         "folder_id": next_folder_id,
-        "original_image": f"{GITHUB_RAW_BASE}/{next_folder_id}/image.jpg",
+        "original_image": f"{GITHUB_RAW_BASE}/{next_folder_id}/image.png",
         "object_name": object_name,
         "heatmaps": [
             {

@@ -151,20 +151,18 @@
             object, while <span style="color: gray;">white</span> regions indicate the <strong>absence</strong>. The
             darker the red area, the higher the probability of object's presense.
             <br />
+            Ideally, only the presense of indicated object will be red and rest of the part will be white. Try
+            to select the heatmap that is more closer to the ideal version.<br>
 
             <strong>Please select the saliency map that best highlights the target object and discards irrelevant
                 regions.
-
-                <br>Ideally, only the presense of indicated object will be red and rest of the part will be white. Try
-                to select the heatmap that is more closer to the ideal version.
             </strong>
 
         </p>
 
         <br><br>
-        <h2 id="object-name" style="text-align: center; margin-top: 10px; color: #333;"></h2>
+        <h2 id="object-name" style="text-align: center; margin-top: 10px; color: #333; font-size: 17px;"></h2>
 
-        <br>
         <br>
 
         <div id="image-grid" class="grid-container">
@@ -194,7 +192,7 @@
 
             let currentUserId = '';
             let currentFolderId = 0;
-            let totalFolders = 100;
+            let totalFolders = 290;
 
             const existingUserId = getCookie('saliency_voting_user');
             if (existingUserId) {
@@ -246,8 +244,7 @@
                     currentFolderId = data.folder_id;
                     updateProgress();
                     renderImages(data.original_image, data.heatmaps);
-                    document.getElementById('object-name').textContent = data.object_name || '';
-
+                    document.getElementById('object-name').textContent = `Heatmap for: ${data.object_name || ''}`;
                     votingContainer.classList.remove('hidden');
                 } catch (error) {
                     console.error('Error loading next image:', error);
