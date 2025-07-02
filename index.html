@@ -5,7 +5,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Saliency Map Voting</title>
-    <!-- <link rel="stylesheet" href="styles.css"> -->
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -60,9 +59,10 @@
 
         .grid-container {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
             margin: 30px 0;
+            align-items: start;
         }
 
         .grid-item {
@@ -72,6 +72,7 @@
             border-radius: 4px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
             transition: transform 0.2s, box-shadow 0.2s;
+            height: 28vh;
         }
 
         .grid-item:hover {
@@ -81,7 +82,8 @@
 
         .grid-item img {
             width: 100%;
-            height: auto;
+            height: 100%;
+            object-fit: cover;
             display: block;
         }
 
@@ -90,11 +92,11 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background-color: rgba(0, 0, 0, 0.7);
+            background-color: rgba(0, 0, 0, 0.5);
             color: white;
-            padding: 8px;
+            padding: 6px;
             text-align: center;
-            font-size: 14px;
+            font-size: 13px;
         }
 
         #progress-container {
@@ -109,6 +111,27 @@
 
         #complete-container h1 {
             color: #4CAF50;
+        }
+
+        .vote-feedback {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(3px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 60px;
+            color: green;
+            z-index: 2;
+        }
+
+        .clicked {
+            transform: scale(1.05);
+            transition: transform 0.3s ease;
         }
     </style>
 </head>
@@ -143,8 +166,7 @@
 
     <script type="text/javascript">
         document.addEventListener('DOMContentLoaded', function () {
-            // Configuration - Set your API base URL here
-            const API_BASE_URL = 'https://xai-blind-test.onrender.com'; // Change this to your actual API server URL
+            const API_BASE_URL = 'https://xai-blind-test.onrender.com';
 
             const loginContainer = document.getElementById('login-container');
             const votingContainer = document.getElementById('voting-container');
@@ -156,9 +178,8 @@
 
             let currentUserId = '';
             let currentFolderId = 0;
-            let totalFolders = 100; // Adjust based on your actual folder count
+            let totalFolders = 100;
 
-            // Check for existing user ID in cookie
             const existingUserId = getCookie('saliency_voting_user');
             if (existingUserId) {
                 userIdInput.value = existingUserId;
@@ -173,14 +194,12 @@
 
                 try {
                     const response = await fetch(`${API_BASE_URL}/api/check_user/${userId}`);
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                     const data = await response.json();
 
                     if (data.exists) {
                         currentUserId = userId;
-                        setCookie('saliency_voting_user', userId, 30); // Store for 30 days
+                        setCookie('saliency_voting_user', userId, 30);
                         loginContainer.classList.add('hidden');
                         loadNextImage();
                     } else {
@@ -195,9 +214,7 @@
             async function loadNextImage() {
                 try {
                     const response = await fetch(`${API_BASE_URL}/api/next_image/${currentUserId}`);
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                     const data = await response.json();
 
                     if (data.status === 'complete') {
@@ -219,15 +236,18 @@
             function renderImages(originalImage, heatmaps) {
                 imageGrid.innerHTML = '';
 
-                // Create original image (not clickable)
                 const originalItem = createImageItem(originalImage, 'Original Image', false);
                 imageGrid.appendChild(originalItem);
 
-                // Create heatmap items (clickable)
-                heatmaps.forEach(heatmap => {
+                const shuffled = heatmaps
+                    .map((value) => ({ value, sort: Math.random() }))
+                    .sort((a, b) => a.sort - b.sort)
+                    .map(({ value }, index) => ({ ...value, displayLabel: `Option ${index + 1}` }));
+
+                shuffled.forEach((heatmap) => {
                     const heatmapItem = createImageItem(
                         heatmap.image_path,
-                        heatmap.method.replace(/_/g, ' '),
+                        heatmap.displayLabel,
                         true,
                         heatmap.method
                     );
@@ -252,12 +272,17 @@
 
                 if (isClickable) {
                     item.addEventListener('click', async () => {
+                        item.classList.add('clicked');
+
+                        const overlay = document.createElement('div');
+                        overlay.className = 'vote-feedback';
+                        overlay.innerHTML = '✅';
+                        item.appendChild(overlay);
+
                         try {
                             const response = await fetch(`${API_BASE_URL}/api/vote/`, {
                                 method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                },
+                                headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
                                     user_id: currentUserId,
                                     folder_id: currentFolderId,
@@ -265,12 +290,11 @@
                                 })
                             });
 
-                            if (!response.ok) {
-                                throw new Error(`HTTP error! status: ${response.status}`);
-                            }
-
+                            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                             const data = await response.json();
+
                             if (data.message === 'Vote recorded successfully') {
+                                await new Promise(resolve => setTimeout(resolve, 500));
                                 loadNextImage();
                             }
                         } catch (error) {
@@ -289,7 +313,6 @@
                 progressText.textContent = `Progress: ${currentFolderId}/${totalFolders}`;
             }
 
-            // Cookie helper functions
             function setCookie(name, value, days) {
                 const date = new Date();
                 date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
@@ -301,14 +324,10 @@
                 const cookieName = name + "=";
                 const decodedCookie = decodeURIComponent(document.cookie);
                 const cookies = decodedCookie.split(';');
-
                 for (let i = 0; i < cookies.length; i++) {
-                    let cookie = cookies[i];
-                    while (cookie.charAt(0) === ' ') {
-                        cookie = cookie.substring(1);
-                    }
+                    let cookie = cookies[i].trim();
                     if (cookie.indexOf(cookieName) === 0) {
-                        return cookie.substring(cookieName.length, cookie.length);
+                        return cookie.substring(cookieName.length);
                     }
                 }
                 return "";
