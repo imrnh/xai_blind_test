@@ -6,6 +6,8 @@ import motor.motor_asyncio
 from datetime import datetime
 import os
 from random import shuffle
+import httpx
+
 
 app = FastAPI()
 
@@ -77,9 +79,18 @@ async def get_next_image(user_id: str):
     shuffled_methods = HEATMAP_METHODS.copy()
     shuffle(shuffled_methods)
 
+    name_txt_url = f"{GITHUB_RAW_BASE}/{next_folder_id}/name.txt"
+
+    async with httpx.AsyncClient() as client:
+        name_response = await client.get(name_txt_url)
+        if name_response.status_code != 200:
+            raise HTTPException(status_code=500, detail="Failed to fetch object name")
+        object_name = name_response.text.strip()
+
     return {
         "folder_id": next_folder_id,
         "original_image": f"{GITHUB_RAW_BASE}/{next_folder_id}/image.jpg",
+        "object_name": object_name,
         "heatmaps": [
             {
                 "method": method,

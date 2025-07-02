@@ -68,7 +68,7 @@
         }
 
         .grid-item {
-            width: 160px;
+            width: 190px;
             aspect-ratio: 1 / 1;
             cursor: pointer;
             overflow: hidden;
@@ -88,6 +88,30 @@
             transform: translateY(-5px);
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
         }
+
+        .grid-item .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 48px;
+            /* Big 👍 emoji */
+            color: green;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 1;
+        }
+
+        .grid-item.voted .overlay {
+            opacity: 1;
+        }
+
 
         #progress-container {
             text-align: center;
@@ -124,10 +148,24 @@
             <strong>Instruction:</strong><br />
             In the saliency maps, <span style="color: red;">red</span> regions indicate the <strong>presence</strong> of
             the
-            object, while <span style="color: gray;">white</span> regions indicate the <strong>absence</strong>.<br />
-            <strong>Select the saliency map that best highlights the target object and discards irrelevant
-                regions.</strong>
+            object, while <span style="color: gray;">white</span> regions indicate the <strong>absence</strong>. The
+            darker the red area, the higher the probability of object's presense.
+            <br />
+
+            <strong>Please select the saliency map that best highlights the target object and discards irrelevant
+                regions.
+
+                <br>Ideally, only the presense of indicated object will be red and rest of the part will be white. Try
+                to select the heatmap that is more closer to the ideal version.
+            </strong>
+
         </p>
+
+        <br><br>
+        <h2 id="object-name" style="text-align: center; margin-top: 10px; color: #333;"></h2>
+
+        <br>
+        <br>
 
         <div id="image-grid" class="grid-container">
             <!-- Images will be loaded here -->
@@ -208,6 +246,8 @@
                     currentFolderId = data.folder_id;
                     updateProgress();
                     renderImages(data.original_image, data.heatmaps);
+                    document.getElementById('object-name').textContent = data.object_name || '';
+
                     votingContainer.classList.remove('hidden');
                 } catch (error) {
                     console.error('Error loading next image:', error);
@@ -237,7 +277,13 @@
                 img.src = imageSrc;
                 img.alt = '';
 
+                // Add overlay div
+                const overlay = document.createElement('div');
+                overlay.className = 'overlay';
+                overlay.textContent = '👍';
+
                 item.appendChild(img);
+                item.appendChild(overlay);
 
                 if (isClickable) {
                     item.addEventListener('click', async () => {
@@ -261,7 +307,8 @@
 
                             const data = await response.json();
                             if (data.message === 'Vote recorded successfully') {
-                                loadNextImage();
+                                // Delay before loading next image to show emoji
+                                setTimeout(loadNextImage, 600);
                             }
                         } catch (error) {
                             console.error('Error recording vote:', error);
