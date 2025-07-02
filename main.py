@@ -87,7 +87,7 @@ async def get_next_image(user_id: str):
     folder_id = last_voted + 1
     
     # GitHub raw content base URL
-    GITHUB_RAW_BASE = "https://raw.githubusercontent.com/{username}/xai_blind_test/main/data/output"
+    GITHUB_RAW_BASE = "https://raw.githubusercontent.com/imrnh/xai_blind_test/main/data/output"
     # Replace {username} with your GitHub username or organization name
     
     heatmap_methods = ['beyond_intuition', 'gradcam', 'integrated_gradient', 'our', 'rollout']
@@ -124,4 +124,4 @@ async def record_vote(vote: Vote):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=3010)
+    uvicorn.run(app, host="0.0.0.0", port=8000)
